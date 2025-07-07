@@ -6,7 +6,10 @@ import matplotlib.pyplot as plt
 import csv
 import pandas as pd
 import cred 
-
+from email.message import EmailMessage
+# Keeps connection secure
+import ssl
+import smtplib
 
 
 # Retrieves today's date which is then embedded into the csv file name.
@@ -36,69 +39,65 @@ if os.path.exists(new_file_name):
     # print(df)
 
 total_amount = 0
+    
+type_of_purchase = pd.read_csv(to_be_converted_file)
+card_payment_row = df[(type_of_purchase['Type'] == 'CARD_PAYMENT')][['Description','Amount']]
+# print(card_payment_row)
 
-# This opens the csv file and counts the number of times "CARD_PAYMENT" appears
-with open(to_be_converted_file,'r') as file:
-    data = file.read()
-    # Retrieves the keyword i.e. "CARD_PAYMENT" and "TRANSFER"
-    no_of_card_payments = data.count("CARD_PAYMENT")
-    no_of_transfers = data.count("TRANSFER")
+no_of_payments = card_payment_row.groupby(['Description']).sum()
+# print(no_of_payments)
+     
+type_of_purchase = pd.read_csv(to_be_converted_file)
+card_payment_row = df[(type_of_purchase['Type'] == 'CARD_PAYMENT')][['Description','Amount']]
+# print(card_payment_row)
 
-    if "REVERTED":
-        new_count = no_of_card_payments + 1
-        print("Card Payments: ",new_count)
-        print("Number of transfers: ", no_of_transfers)
-    else:
-        print("Card Payments: ",no_of_card_payments)
-        print("Number of transfers: ", no_of_transfers)
+no_of_payments = card_payment_row.groupby(['Description']).sum().abs()
+# print(no_of_payments)
 
+no_of_payments.to_csv('all_transactions.csv',header=None)
+  
+x = []
+y = []
 
-# This opens the recently created file and writes "Amount" column into the all_transactions.csv file.
-# It iterates through each row in the file and removes the "-" symbol.
-# This is done in order to plot the graph properly in Matplotlib.
+with open('all_transactions.csv','r') as csvfile:
+    plots = csv.reader(csvfile, delimiter = ',')
+    
+    for row in plots:
+        x.append(row[0])
+        y.append(float(row[1]))
 
-with open(cred.new_file_path,'r') as file:
-    reader = csv.reader(file)
-    next(reader)
-    with open("all_transaction.csv","w") as transactions:
-        writer = csv.writer(transactions)
-        total_amount = 0
-        for row in reader:
-            minus_removed = row[5].strip("-")
-            type_of_transaction = row[0]
-            all_amounts = float(minus_removed) 
-            writer.writerow([type_of_transaction,all_amounts])        
-            total_amount += all_amounts 
-            print("Total Amount",total_amount,type_of_transaction)
-            
-card = 0
-transfer = 0
-
-with open("all_transaction.csv", 'r') as file:
-    data = file.read()
-    for line in data.splitlines():
-        if "CARD_PAYMENT" in line:
-            card += float(line.split(",")[1])
-        elif "TRANSFER" in line:
-            transfer += float(line.split(",")[1])
-
-print("Card payment total:", card)
-print("Transfer total:", transfer)
-
-x = ["Card Payments"," Bank Transfers"]
-y = card,transfer
-
-plt.title(f"{the_date} Graph")
-plt.xlabel('Transaction Type')
+plt.bar(x, y, color = 'g', width = 0.72)
+plt.xlabel('Shop')
 plt.ylabel('Amount (€)')
-
-plt.bar(x,y)
+plt.title(f'Amount spent on {the_date}')
 plt.savefig(cred.file_path_to_save_graph,dpi=300)
-# plt.show()
-
 # Removes the following files after processing.
 files_to_remove = ["all_transaction.csv",cred.file_to_remove,f"Statements\\{the_date} Statement.csv"]
 
-for i in files_to_remove:
-    os.remove(i)
+email_sender = cred.email_address
+# I did this as I didn't want the the code to be displayed in text editor
+# "email_key.txt" is assigned to the variable "the_code"
+the_code = open("email_key.txt","rt")            
+# I assigned the "the_code" file to another variable "email_password"  This reads the "email_key.txt" file.
+email_password = the_code.read()
+# Finally closes the file.                                                                                                                                                                                                                                                                                                             
+the_code.close()                                
+email_reciever = cred.email_address 
 
+subject = f"Bank Statement for {the_date}"                  
+body = """                   
+Here is your bank statement
+"""    
+
+context = ssl.create_default_context()
+
+with smtplib.SMTP_SSL("smtp.gmail.com", 465, context=context) as smtp:
+    smtp.login(email_sender, email_password)
+    
+    em = EmailMessage()
+    em["From"] = email_sender
+    em["To"] = email_reciever
+    em["subject"] = subject
+    em.set_content(body)
+        
+    smtp.sendmail(email_sender, email_reciever, em.as_string())

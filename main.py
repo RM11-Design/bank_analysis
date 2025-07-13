@@ -9,6 +9,7 @@ import cred
 from email.message import EmailMessage
 # Keeps connection secure
 import ssl
+import imghdr
 import smtplib
 
 
@@ -54,28 +55,33 @@ card_payment_row = df[(type_of_purchase['Type'] == 'CARD_PAYMENT')][['Descriptio
 no_of_payments = card_payment_row.groupby(['Description']).sum().abs()
 # print(no_of_payments)
 
-no_of_payments.to_csv('all_transactions.csv',header=None)
+no_of_payments.to_csv('all_transactions.csv')
   
 x = []
 y = []
 
 with open('all_transactions.csv','r') as csvfile:
     plots = csv.reader(csvfile, delimiter = ',')
-    
+    headings = next(plots)
+
     for row in plots:
         x.append(row[0])
         y.append(float(row[1]))
 
+plt.figure(figsize=(17, 10))
 plt.bar(x, y, color = 'g', width = 0.72)
 plt.xlabel('Shop')
 plt.ylabel('Amount (€)')
+
+plt.xticks(rotation=45)  # rotate labels
+plt.tight_layout()       # prevent labels from getting cut off
+
 plt.title(f'Amount spent on {the_date}')
 plt.savefig(cred.file_path_to_save_graph,dpi=300)
 # Removes the following files after processing.
-files_to_remove = ["all_transaction.csv",cred.file_to_remove,f"Statements\\{the_date} Statement.csv"]
+files_to_remove = ["all_transactions.csv",cred.file_to_remove,f"Statements\\{the_date} Statement.csv"]
 
 email_sender = cred.email_address
-# I did this as I didn't want the the code to be displayed in text editor
 # "email_key.txt" is assigned to the variable "the_code"
 the_code = open("email_key.txt","rt")            
 # I assigned the "the_code" file to another variable "email_password"  This reads the "email_key.txt" file.
@@ -99,5 +105,13 @@ with smtplib.SMTP_SSL("smtp.gmail.com", 465, context=context) as smtp:
     em["To"] = email_reciever
     em["subject"] = subject
     em.set_content(body)
+    
+    with open(cred.file_path_to_save_graph,'rb') as f:
+        file_data = f.read()
+        file_type = imghdr.what(f.name)
+        file_name = f.name
         
+        em.add_attachment(file_data,maintype="image",subtype=file_type,filename=file_name)
+        
+                
     smtp.sendmail(email_sender, email_reciever, em.as_string())

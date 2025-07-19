@@ -1,6 +1,9 @@
 import streamlit as st
 import pandas as pd
+from datetime import datetime
 # import matplotlib.pyplot as plt
+
+the_date = datetime.today().strftime("%b-%y")
 
 st.title("Automated Statement Processor")
 st.write("Upload your bank statement file to see the spending summary.")
@@ -18,4 +21,5 @@ if uploaded_file:
     summary = card_payments.groupby('Description')['Amount'].sum().abs()
 
     st.write(summary)
+    st.title(f"Graph for {the_date}")
     st.bar_chart(summary)

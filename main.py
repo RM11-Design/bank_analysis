@@ -4,7 +4,6 @@ import os
 import glob
 import matplotlib.pyplot as plt
 import csv
-import pandas as pd
 import cred 
 from email.message import EmailMessage
 # Keeps connection secure

@@ -1,6 +1,6 @@
 import streamlit as st
 import pandas as pd
-import matplotlib.pyplot as plt
+# import matplotlib.pyplot as plt
 
 st.title("Automated Statement Processor")
 st.write("Upload your bank statement file to see the spending summary.")

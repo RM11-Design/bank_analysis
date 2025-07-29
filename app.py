@@ -23,12 +23,30 @@ if uploaded_file:
     # This keeps track of the items that are reimbursed, so that it can be removed later from the graph.
     reimbursed_descriptions = []
     for description, amount in summary.items():
-        reimbursed = st.checkbox(f"{description}: €{amount}", key=description)
+        reimbursed = st.checkbox(f"{description}: €{amount:.2f}", key=description)
         if reimbursed == True:
             # Adds the current description to the reimbursed list.
             reimbursed_descriptions.append(description)
             
     filtered_summary = summary.drop(reimbursed_descriptions)
+    
+    final_total = sum(filtered_summary)
+    
+    # The following lines is used to style the "final_total" element.
+    
+    st.set_page_config(layout="wide")
+
+    st.markdown("""
+    <style>
+    .big-font {
+        font-size:45px !important;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+    
+    st.markdown(f'<p class="big-font">€{final_total}</p>', unsafe_allow_html=True)
+    
+    # st.write(final_total)
 
     # st.write(filtered_summary)
     st.title(f"Graph for {the_date}")

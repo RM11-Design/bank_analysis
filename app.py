@@ -5,8 +5,8 @@ from datetime import datetime
 
 the_date = datetime.today().strftime("%b-%y")
 
-st.title("Automated Statement Processor")
-st.write("Upload your bank statement file to see your spending summary.")
+st.title("Statement Snap")
+st.write("Upload your bank statement, filter reimbursed expenses, and get a clear view of your actual spending.")
 
 uploaded_file = st.file_uploader("Upload your bank statement Excel file", type=["xlsx"])
 

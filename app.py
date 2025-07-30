@@ -1,7 +1,10 @@
 import streamlit as st
 import pandas as pd
 from datetime import datetime
+import openpyxl 
 # import matplotlib.pyplot as plt
+
+st.set_page_config(layout="wide")
 
 the_date = datetime.today().strftime("%b-%y")
 
@@ -34,8 +37,6 @@ if uploaded_file:
     
     # The following lines is used to style the "final_total" element.
     
-    st.set_page_config(layout="wide")
-
     st.markdown("""
     <style>
     .big-font {
@@ -47,6 +48,12 @@ if uploaded_file:
     st.markdown(f'<p class="big-font">€{final_total}</p>', unsafe_allow_html=True)
     
     # st.write(final_total)
+    
+    downloadable_file = filtered_summary.to_csv()
+
+    st.download_button(label='Downloaded updated statement',
+                                data=downloadable_file,
+                                file_name=f"{the_date}.csv")
 
     # st.write(filtered_summary)
     st.title(f"Graph for {the_date}")
